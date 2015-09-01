@@ -60,6 +60,6 @@ p result.inspect
 p result.deployments[0].status
 p '-----'
 
-exit 1 if p result.deployments[0].exit_code != 'successful'
+exit 1 if p result.deployments[0].status != 'successful'
 
 exit 0
