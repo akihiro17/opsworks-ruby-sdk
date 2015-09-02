@@ -35,6 +35,25 @@ client = Aws::OpsWorks::Client.new(
   secret_access_key: AWS_ACCOUNT[:secret_access_key]
 )
 
+# always update_custom_cookbooks
+resp = client.create_deployment(stack_id: GAMESERVER_APPS[:stack_id],
+                                app_id: GAMESERVER_APPS[:app_id],
+                                instance_ids: [GAMESERVER_APPS[:instance_id]],
+                                command: {
+                                  name: 'update_custom_cookbooks'
+                                },
+                                comment: 'update custom cookbooks')
+
+client.wait_until(:deployment_successful,
+                  deployment_ids: [resp.deployment_id]) do |w|
+  w.max_attempts = 20
+  w.delay = 30
+
+  w.before_attempt do |n|
+    p "update custom books #{n * w.delay}秒経過"
+  end
+end
+
 resp = client.create_deployment(stack_id: GAMESERVER_APPS[:stack_id],
                                 app_id: GAMESERVER_APPS[:app_id],
                                 instance_ids: [GAMESERVER_APPS[:instance_id]],
@@ -60,6 +79,6 @@ p result.inspect
 p result.deployments[0].status
 p '-----'
 
-exit 1 if p result.deployments[0].status != 'successful'
+exit 1 if result.deployments[0].status != 'successful'
 
 exit 0
