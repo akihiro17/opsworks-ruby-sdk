@@ -11,6 +11,7 @@ OptionParser.new do |opt|
   opt.on('--app=VALUE', '1文字オプション 引数あり（必須）') { |v| option[:app] = v }
   opt.on('--instance=VALUE', '1文字オプション 引数あり（必須）') { |v| option[:instance] = v }
   opt.on('--command=VALUE', '1文字オプション 引数あり（必須）') { |v| option[:command] = v }
+  opt.on('--[no-]update', '1文字オプション 引数あり（必須）') { |v| option[:update] = v }
 
   opt.parse!(ARGV)
 end
@@ -35,22 +36,23 @@ client = Aws::OpsWorks::Client.new(
   secret_access_key: AWS_ACCOUNT[:secret_access_key]
 )
 
-# always update_custom_cookbooks
-resp = client.create_deployment(stack_id: GAMESERVER_APPS[:stack_id],
-                                app_id: GAMESERVER_APPS[:app_id],
-                                instance_ids: [GAMESERVER_APPS[:instance_id]],
-                                command: {
-                                  name: 'update_custom_cookbooks'
-                                },
-                                comment: 'update custom cookbooks')
+if option[:update]
+  resp = client.create_deployment(stack_id: GAMESERVER_APPS[:stack_id],
+                                  app_id: GAMESERVER_APPS[:app_id],
+                                  instance_ids: [GAMESERVER_APPS[:instance_id]],
+                                  command: {
+                                    name: 'update_custom_cookbooks'
+                                  },
+                                  comment: 'update custom cookbooks')
 
-client.wait_until(:deployment_successful,
-                  deployment_ids: [resp.deployment_id]) do |w|
-  w.max_attempts = 20
-  w.delay = 30
+  client.wait_until(:deployment_successful,
+                    deployment_ids: [resp.deployment_id]) do |w|
+    w.max_attempts = 20
+    w.delay = 30
 
-  w.before_attempt do |n|
-    p "update custom books #{n * w.delay}秒経過"
+    w.before_attempt do |n|
+      p "update custom books #{n * w.delay}秒経過"
+    end
   end
 end
 
